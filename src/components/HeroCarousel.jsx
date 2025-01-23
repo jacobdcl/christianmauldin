@@ -23,13 +23,13 @@ const CarouselContainer = styled.div`
 
 const MainImageContainer = styled.div`
   width: 100%;
-  height: 65vh; // Percentage of viewport height
+  height: 55vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding-left: 5vw;
   padding-right: 5vw;
-  margin-bottom: 2vh; // Viewport-relative margin
+  margin-bottom: 5vh;
 
   @media (max-width: 768px) {
     height: 60vh;
