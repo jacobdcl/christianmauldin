@@ -7,32 +7,34 @@ const SCROLL_SPEED = 25; // Slower speed for smoother scrolling
 
 const CarouselContainer = styled.div`
   width: 100%;
-  height: calc(100vh - ${HEADER_HEIGHT});
+  height: 100vh; // Use full viewport height
+  height: 100dvh; // Use dynamic viewport height for mobile browsers
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
   overflow: hidden;
-  padding: 1rem 0;
-  margin-top: ${HEADER_HEIGHT};
+  padding-top: calc(${HEADER_HEIGHT} + 0.5rem);
   background: #fff;
 
   @media (max-width: 768px) {
-    padding: 0.5rem 0;
+    padding-top: ${HEADER_HEIGHT};
   }
 `;
 
 const MainImageContainer = styled.div`
   width: 100%;
   flex: 1;
-  min-height: 0; // Important for flex container
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
 
   @media (max-width: 768px) {
-    padding: 0.5rem;
+    padding: 0.25rem;
+    margin-bottom: 0.25rem;
   }
 `;
 
@@ -42,7 +44,8 @@ const MainImage = styled.img`
   object-fit: contain;
   
   @media (max-width: 768px) {
-    max-width: 90%;
+    max-width: 95%;
+    max-height: 95%;
   }
 `;
 
@@ -52,10 +55,9 @@ const FilmStripContainer = styled.div`
   position: relative;
   overflow: hidden;
   background: #000;
-  margin-bottom: 0; // Remove bottom margin
 
   @media (max-width: 768px) {
-    height: 110px;
+    height: min(110px, 15vh); // Use viewport-relative height on mobile
   }
 `;
 
