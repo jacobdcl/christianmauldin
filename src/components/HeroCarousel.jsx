@@ -7,30 +7,43 @@ const SCROLL_SPEED = 25; // Slower speed for smoother scrolling
 
 const CarouselContainer = styled.div`
   width: 100%;
-  min-height: calc(100vh - ${HEADER_HEIGHT});
+  height: calc(100vh - ${HEADER_HEIGHT});
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 1.5rem;
+  justify-content: space-between;
   overflow: hidden;
-  padding: 2rem 0;
+  padding: 1rem 0;
   margin-top: ${HEADER_HEIGHT};
   background: #fff;
+
+  @media (max-width: 768px) {
+    padding: 0.5rem 0;
+  }
 `;
 
 const MainImageContainer = styled.div`
   width: 100%;
-  height: 60vh;
+  flex: 1;
+  min-height: 0; // Important for flex container
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 1rem;
+
+  @media (max-width: 768px) {
+    padding: 0.5rem;
+  }
 `;
 
 const MainImage = styled.img`
   max-width: 80%;
   max-height: 100%;
   object-fit: contain;
+  
+  @media (max-width: 768px) {
+    max-width: 90%;
+  }
 `;
 
 const FilmStripContainer = styled.div`
@@ -39,7 +52,7 @@ const FilmStripContainer = styled.div`
   position: relative;
   overflow: hidden;
   background: #000;
-  margin-bottom: 2rem;
+  margin-bottom: 0; // Remove bottom margin
 
   @media (max-width: 768px) {
     height: 110px;
@@ -265,130 +278,130 @@ const FrameNumber = styled.div`
 `;
 
 function HeroCarousel() {
-    const [images, setImages] = useState([]);
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [userSelected, setUserSelected] = useState(false);
-    const stripRef = useRef(null);
-    const scrollRef = useRef({ startTime: null, totalOffset: 0 });
-    const frameWidth = 200;
+  const [images, setImages] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [userSelected, setUserSelected] = useState(false);
+  const stripRef = useRef(null);
+  const scrollRef = useRef({ startTime: null, totalOffset: 0 });
+  const frameWidth = 200;
 
-    const handleFrameClick = (index) => {
-        setCurrentIndex(index % images.length);
-        setUserSelected(true);
+  const handleFrameClick = (index) => {
+    setCurrentIndex(index % images.length);
+    setUserSelected(true);
+  };
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        const [works, personal] = await Promise.all([
+          client.fetch('*[_type == "work"] { images[] }'),
+          client.fetch('*[_type == "personal"] { images[] }')
+        ]);
+
+        const workImages = works.flatMap(work => work.images || []);
+        const personalImages = personal.flatMap(collection => collection.images || []);
+        const allImages = [...workImages, ...personalImages];
+        const shuffledImages = allImages.sort(() => Math.random() - 0.5);
+        setImages(shuffledImages);
+      } catch (error) {
+        console.error('Error fetching images:', error);
+      }
     };
 
-    useEffect(() => {
-        const fetchImages = async () => {
-            try {
-                const [works, personal] = await Promise.all([
-                    client.fetch('*[_type == "work"] { images[] }'),
-                    client.fetch('*[_type == "personal"] { images[] }')
-                ]);
+    fetchImages();
+  }, []);
 
-                const workImages = works.flatMap(work => work.images || []);
-                const personalImages = personal.flatMap(collection => collection.images || []);
-                const allImages = [...workImages, ...personalImages];
-                const shuffledImages = allImages.sort(() => Math.random() - 0.5);
-                setImages(shuffledImages);
-            } catch (error) {
-                console.error('Error fetching images:', error);
-            }
-        };
+  useEffect(() => {
+    if (!images.length || !stripRef.current) return;
 
-        fetchImages();
-    }, []);
+    let animationFrame;
 
-    useEffect(() => {
-        if (!images.length || !stripRef.current) return;
+    const animate = (timestamp) => {
+      if (!scrollRef.current.startTime) {
+        scrollRef.current.startTime = timestamp;
+      }
 
-        let animationFrame;
+      const progress = timestamp - scrollRef.current.startTime;
+      scrollRef.current.totalOffset += (SCROLL_SPEED / 1000) * 16.67;
 
-        const animate = (timestamp) => {
-            if (!scrollRef.current.startTime) {
-                scrollRef.current.startTime = timestamp;
-            }
+      const totalWidth = frameWidth * images.length;
 
-            const progress = timestamp - scrollRef.current.startTime;
-            scrollRef.current.totalOffset += (SCROLL_SPEED / 1000) * 16.67;
+      if (scrollRef.current.totalOffset >= totalWidth) {
+        scrollRef.current.totalOffset -= totalWidth;
+        scrollRef.current.startTime = timestamp;
+      }
 
-            const totalWidth = frameWidth * images.length;
+      stripRef.current.style.transform = `translateX(-${scrollRef.current.totalOffset}px)`;
 
-            if (scrollRef.current.totalOffset >= totalWidth) {
-                scrollRef.current.totalOffset -= totalWidth;
-                scrollRef.current.startTime = timestamp;
-            }
+      // Only update the current index if user hasn't manually selected an image
+      if (!userSelected) {
+        const viewportCenter = window.innerWidth / 2;
+        const scrollPosition = scrollRef.current.totalOffset;
+        const adjustedPosition = (scrollPosition + viewportCenter) % (images.length * frameWidth);
+        const newIndex = Math.floor(adjustedPosition / frameWidth) % images.length;
 
-            stripRef.current.style.transform = `translateX(-${scrollRef.current.totalOffset}px)`;
+        if (newIndex !== currentIndex) {
+          setCurrentIndex(newIndex);
+        }
+      }
 
-            // Only update the current index if user hasn't manually selected an image
-            if (!userSelected) {
-                const viewportCenter = window.innerWidth / 2;
-                const scrollPosition = scrollRef.current.totalOffset;
-                const adjustedPosition = (scrollPosition + viewportCenter) % (images.length * frameWidth);
-                const newIndex = Math.floor(adjustedPosition / frameWidth) % images.length;
+      animationFrame = requestAnimationFrame(animate);
+    };
 
-                if (newIndex !== currentIndex) {
-                    setCurrentIndex(newIndex);
-                }
-            }
+    animationFrame = requestAnimationFrame(animate);
 
-            animationFrame = requestAnimationFrame(animate);
-        };
+    return () => {
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+    };
+  }, [images.length, currentIndex, userSelected]);
 
-        animationFrame = requestAnimationFrame(animate);
+  if (!images.length) return null;
 
-        return () => {
-            if (animationFrame) {
-                cancelAnimationFrame(animationFrame);
-            }
-        };
-    }, [images.length, currentIndex, userSelected]);
+  const extendedImages = [...images, ...images, ...images, ...images, ...images];
 
-    if (!images.length) return null;
-
-    const extendedImages = [...images, ...images, ...images, ...images, ...images];
-
-    return (
-        <CarouselContainer>
-            <MainImageContainer>
-                <MainImage
-                    src={urlFor(images[currentIndex]).width(1200).url()}
-                    alt="Featured work"
-                    loading="eager"
+  return (
+    <CarouselContainer>
+      <MainImageContainer>
+        <MainImage
+          src={urlFor(images[currentIndex]).width(1200).url()}
+          alt="Featured work"
+          loading="eager"
+        />
+      </MainImageContainer>
+      <FilmStripContainer>
+        <FilmStrip ref={stripRef}>
+          <FilmScratchOverlay />
+          <KodakText>
+            {/* Repeat KODAK text multiple times */}
+            {Array(20).fill('KODAK EPP 5005').map((text, i) => (
+              <span key={i}>{text}</span>
+            ))}
+          </KodakText>
+          <HolesContainer>
+            <HolesRow className="top" />
+            <HolesRow className="bottom" />
+          </HolesContainer>
+          {extendedImages.map((image, index) => (
+            <FilmFrameContainer
+              key={`${index}-${image._key || index}`}
+              onClick={() => handleFrameClick(index)}
+            >
+              <ExposureArea>
+                <FrameImage
+                  src={urlFor(image).width(300).url()}
+                  alt={`Frame ${(index % images.length) + 1}`}
+                  loading="lazy"
                 />
-            </MainImageContainer>
-            <FilmStripContainer>
-                <FilmStrip ref={stripRef}>
-                    <FilmScratchOverlay />
-                    <KodakText>
-                        {/* Repeat KODAK text multiple times */}
-                        {Array(20).fill('KODAK EPP 5005').map((text, i) => (
-                            <span key={i}>{text}</span>
-                        ))}
-                    </KodakText>
-                    <HolesContainer>
-                        <HolesRow className="top" />
-                        <HolesRow className="bottom" />
-                    </HolesContainer>
-                    {extendedImages.map((image, index) => (
-                        <FilmFrameContainer
-                            key={`${index}-${image._key || index}`}
-                            onClick={() => handleFrameClick(index)}
-                        >
-                            <ExposureArea>
-                                <FrameImage
-                                    src={urlFor(image).width(300).url()}
-                                    alt={`Frame ${(index % images.length) + 1}`}
-                                    loading="lazy"
-                                />
-                            </ExposureArea>
-                            <FrameNumber>{(index % images.length) + 1}</FrameNumber>
-                        </FilmFrameContainer>
-                    ))}
-                </FilmStrip>
-            </FilmStripContainer>
-        </CarouselContainer>
-    );
+              </ExposureArea>
+              <FrameNumber>{(index % images.length) + 1}</FrameNumber>
+            </FilmFrameContainer>
+          ))}
+        </FilmStrip>
+      </FilmStripContainer>
+    </CarouselContainer>
+  );
 }
 
 export default HeroCarousel; 
