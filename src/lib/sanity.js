@@ -5,12 +5,11 @@ export const client = createClient({
   projectId: 'tuca5i9i',
   dataset: 'production',
   apiVersion: '2024-01-01',
-  useCdn: false,
+  useCdn: true,
   token: import.meta.env.VITE_SANITY_TOKEN,
   withCredentials: true,
   cors: true,
-  ignoreBrowserTokenWarning: true,
-  apiHost: 'https://tuca5i9i.api.sanity.io'
+  ignoreBrowserTokenWarning: true
 });
 
 const builder = imageUrlBuilder(client);
