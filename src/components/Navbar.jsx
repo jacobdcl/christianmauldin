@@ -91,6 +91,7 @@ const MobileMenuButton = styled.button`
   font-weight: ${props => props.$isOpen ? '600' : '400'};
   opacity: ${props => props.$isOpen ? '1' : '0.8'};
   transition: all 0.2s ease;
+  color: inherit;
 
   @media (max-width: 768px) {
     display: flex;
