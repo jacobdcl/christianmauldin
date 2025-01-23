@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 
 const Nav = styled.nav`
   width: 100%;
-  padding: 2rem;
+  padding: 1.5rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -13,17 +13,22 @@ const Nav = styled.nav`
   left: 0;
   z-index: 1000;
   background: ${({ theme }) => theme.colors.background};
+  height: 80px;
 `;
 
 const Logo = styled(Link)`
-  font-size: 1.2rem;
+  font-size: 1.8rem;
   font-weight: 600;
   letter-spacing: -0.02em;
+
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+  }
 `;
 
 const NavLinks = styled.div`
   display: flex;
-  gap: 2rem;
+  gap: 2.5rem;
 
   @media (max-width: 768px) {
     position: fixed;
@@ -43,7 +48,7 @@ const NavLinks = styled.div`
 `;
 
 const NavLink = styled(Link)`
-  font-size: 1rem;
+  font-size: 1.25rem;
   letter-spacing: -0.01em;
   font-weight: ${props => props.$isActive ? '600' : '400'};
   opacity: ${props => props.$isActive ? '1' : '0.8'};
@@ -70,7 +75,7 @@ const NavLink = styled(Link)`
   }
 
   @media (max-width: 768px) {
-    font-size: 1.1rem;
+    font-size: 1.4rem;
     padding: 0.5rem 0;
   }
 `;
@@ -81,7 +86,7 @@ const MobileMenuButton = styled.button`
   border: none;
   padding: 0.5rem;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 1.25rem;
   font-weight: ${props => props.$isOpen ? '600' : '400'};
   opacity: ${props => props.$isOpen ? '1' : '0.8'};
   transition: all 0.2s ease;
