@@ -1,8 +1,13 @@
 import styled from 'styled-components';
 
+// Define a constant for header height to use across components
+export const HEADER_HEIGHT = '80px';
+
 export const PageContainer = styled.div`
-  padding: 100px 2rem 2rem 2rem;
+  width: 100%;
   min-height: 100vh;
+  padding: 2rem;
+  padding-top: calc(${HEADER_HEIGHT} + 2rem); // Header height plus padding
 `;
 
 export const Grid = styled.div`

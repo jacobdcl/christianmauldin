@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 import { Link, useLocation } from 'react-router-dom';
+import { HEADER_HEIGHT } from '../styles/SharedComponents';
 
 const Nav = styled.nav`
   width: 100%;
-  padding: 1.5rem 2rem;
+  height: ${HEADER_HEIGHT};
+  padding: 0 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -13,7 +15,6 @@ const Nav = styled.nav`
   left: 0;
   z-index: 1000;
   background: ${({ theme }) => theme.colors.background};
-  height: 80px;
 `;
 
 const Logo = styled(Link)`
@@ -32,7 +33,7 @@ const NavLinks = styled.div`
 
   @media (max-width: 768px) {
     position: fixed;
-    top: 80px;
+    top: ${HEADER_HEIGHT};
     left: 0;
     right: 0;
     background: ${({ theme }) => theme.colors.background};
