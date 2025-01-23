@@ -8,6 +8,8 @@ export const client = createClient({
   useCdn: false,
   token: import.meta.env.VITE_SANITY_TOKEN,
   withCredentials: true,
+  cors: true,
+  ignoreBrowserTokenWarning: true
 });
 
 const builder = imageUrlBuilder(client);
