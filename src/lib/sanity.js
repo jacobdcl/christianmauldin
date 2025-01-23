@@ -9,7 +9,8 @@ export const client = createClient({
   token: import.meta.env.VITE_SANITY_TOKEN,
   withCredentials: true,
   cors: true,
-  ignoreBrowserTokenWarning: true
+  ignoreBrowserTokenWarning: true,
+  apiHost: 'https://tuca5i9i.api.sanity.io'
 });
 
 const builder = imageUrlBuilder(client);
