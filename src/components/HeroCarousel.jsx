@@ -12,7 +12,7 @@ const CarouselContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2rem;
+  gap: 1.5rem;
   overflow: hidden;
   padding: 2rem 0;
   margin-top: ${HEADER_HEIGHT};
@@ -49,16 +49,17 @@ const FilmStripContainer = styled.div`
 const KodakText = styled.div`
   position: absolute;
   top: 1px;
-  left: 0;
-  width: 100%;
+  left: -5000px; // Match FilmScratchOverlay
+  width: calc(100% + 10000px); // Match FilmScratchOverlay
   color: #ffd700;
   font-family: "Courier New", monospace;
   font-size: 8px;
   font-weight: bold;
   letter-spacing: 1px;
-  z-index: 2;
+  z-index: 5;
   white-space: nowrap;
-  overflow: hidden;
+  overflow: visible;
+  pointer-events: none;
 
   span {
     margin-right: 350px;
@@ -110,7 +111,7 @@ const HolesContainer = styled.div`
 `;
 
 const HolesRow = styled.div`
-  height: 14px;
+  height: 24px;
   width: 100%;
   background-color: #000;
   position: relative;
@@ -150,7 +151,7 @@ const HolesRow = styled.div`
         transparent 2px,
         transparent 4px
       );
-    background-size: 25px 6px, 3px 3px, 3px 3px;
+    background-size: 25px 12px, 3px 3px, 3px 3px;
     background-repeat: repeat-x, repeat, repeat;
   }
 
@@ -162,26 +163,26 @@ const HolesRow = styled.div`
 
   &.bottom {
     &:before {
-      background-position: 0 2px, 0 0, 0 0;
+      background-position: 0 8px, 0 0, 0 0;
     }
   }
 
   @media (max-width: 768px) {
-    height: 12px;
+    height: 20px;
 
     &:before {
-      background-size: 20px 4px, 2px 2px, 2px 2px;
+      background-size: 20px 9px, 2px 2px, 2px 2px;
     }
 
     &.top {
       &:before {
-        background-position: 0 5px, 0 0, 0 0;
+        background-position: 0 4px, 0 0, 0 0;
       }
     }
 
     &.bottom {
       &:before {
-        background-position: 0 1px, 0 0, 0 0;
+        background-position: 0 7px, 0 0, 0 0;
       }
     }
   }
