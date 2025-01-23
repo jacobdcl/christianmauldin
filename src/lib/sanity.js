@@ -5,7 +5,9 @@ export const client = createClient({
   projectId: 'tuca5i9i',
   dataset: 'production',
   apiVersion: '2024-01-01',
-  useCdn: true,
+  useCdn: false,
+  token: import.meta.env.VITE_SANITY_TOKEN,
+  withCredentials: true,
 });
 
 const builder = imageUrlBuilder(client);
