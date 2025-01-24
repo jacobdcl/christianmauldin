@@ -142,11 +142,16 @@ const FilmFrameContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   padding: 35px 0;
-  cursor: pointer;
+  cursor: grab;
   transition: transform 0.3s ease;
+  user-select: none;
 
   &:hover {
     transform: scale(1.02);
+  }
+
+  &:active {
+    cursor: grabbing;
   }
 
   @media (max-width: 768px) {
@@ -164,6 +169,7 @@ const ExposureArea = styled.div`
   overflow: hidden;
   align-self: center;
   width: 100%;
+  pointer-events: none;
 `;
 
 const FrameImage = styled.img`
@@ -175,6 +181,9 @@ const FrameImage = styled.img`
   height: 100%;
   object-fit: cover;
   object-position: center;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
 `;
 
 const FrameNumber = styled.div`
@@ -211,7 +220,70 @@ const FrameNumber = styled.div`
 function FilmStripComponent({ images, currentIndex, onFrameClick, userSelected, onIndexChange }) {
     const stripRef = useRef(null);
     const animationRef = useRef(null);
-    const scrollRef = useRef({ startTime: null, totalOffset: 0 });
+    const scrollRef = useRef({
+        startTime: null,
+        totalOffset: 0,
+        isDragging: false,
+        startX: 0,
+        lastX: 0,
+        momentum: 0
+    });
+
+    // Handle mouse/touch down
+    const handleDragStart = (e) => {
+        const clientX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
+
+        scrollRef.current.isDragging = true;
+        scrollRef.current.startX = clientX;
+        scrollRef.current.lastX = clientX;
+        scrollRef.current.momentum = 0;
+
+        if (animationRef.current) {
+            cancelAnimationFrame(animationRef.current);
+        }
+    };
+
+    // Handle mouse/touch move
+    const handleDragMove = (e) => {
+        if (!scrollRef.current.isDragging) return;
+
+        const clientX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
+        const deltaX = clientX - scrollRef.current.lastX;
+
+        scrollRef.current.totalOffset -= deltaX;
+        scrollRef.current.momentum = deltaX * 0.8; // Store momentum for inertia
+        scrollRef.current.lastX = clientX;
+
+        // Keep scroll within bounds
+        const totalWidth = FRAME_WIDTH * images.length;
+        if (scrollRef.current.totalOffset >= totalWidth) {
+            scrollRef.current.totalOffset -= totalWidth;
+        } else if (scrollRef.current.totalOffset < 0) {
+            scrollRef.current.totalOffset += totalWidth;
+        }
+
+        stripRef.current.style.transform = `translateX(-${scrollRef.current.totalOffset}px)`;
+
+        // Update current index based on position
+        if (!userSelected) {
+            const viewportCenter = window.innerWidth / 2;
+            const scrollPosition = scrollRef.current.totalOffset;
+            const adjustedPosition = (scrollPosition + viewportCenter) % (images.length * FRAME_WIDTH);
+            const newIndex = Math.floor(adjustedPosition / FRAME_WIDTH) % images.length;
+
+            if (newIndex !== currentIndex) {
+                onIndexChange(newIndex);
+            }
+        }
+    };
+
+    // Handle mouse/touch up
+    const handleDragEnd = () => {
+        if (!scrollRef.current.isDragging) return;
+
+        scrollRef.current.isDragging = false;
+        animationRef.current = requestAnimationFrame(animate);
+    };
 
     // Animation effect
     useEffect(() => {
@@ -222,18 +294,27 @@ function FilmStripComponent({ images, currentIndex, onFrameClick, userSelected, 
                 scrollRef.current.startTime = timestamp;
             }
 
-            const progress = timestamp - scrollRef.current.startTime;
-            scrollRef.current.totalOffset += (SCROLL_SPEED / 1000) * 16.67;
+            // Apply momentum/inertia if it exists
+            if (Math.abs(scrollRef.current.momentum) > 0.1) {
+                scrollRef.current.totalOffset -= scrollRef.current.momentum;
+                scrollRef.current.momentum *= 0.95; // Decay the momentum
+            } else {
+                // Normal auto-scroll animation
+                scrollRef.current.totalOffset += (SCROLL_SPEED / 1000) * 16.67;
+            }
 
             const totalWidth = FRAME_WIDTH * images.length;
             if (scrollRef.current.totalOffset >= totalWidth) {
                 scrollRef.current.totalOffset -= totalWidth;
                 scrollRef.current.startTime = timestamp;
+            } else if (scrollRef.current.totalOffset < 0) {
+                scrollRef.current.totalOffset += totalWidth;
+                scrollRef.current.startTime = timestamp;
             }
 
             stripRef.current.style.transform = `translateX(-${scrollRef.current.totalOffset}px)`;
 
-            if (!userSelected) {
+            if (!userSelected && !scrollRef.current.isDragging) {
                 const viewportCenter = window.innerWidth / 2;
                 const scrollPosition = scrollRef.current.totalOffset;
                 const adjustedPosition = (scrollPosition + viewportCenter) % (images.length * FRAME_WIDTH);
@@ -249,14 +330,39 @@ function FilmStripComponent({ images, currentIndex, onFrameClick, userSelected, 
 
         animationRef.current = requestAnimationFrame(animate);
 
+        // Add event listeners
+        const strip = stripRef.current;
+        strip.addEventListener('mousedown', handleDragStart);
+        strip.addEventListener('touchstart', handleDragStart, { passive: true });
+        window.addEventListener('mousemove', handleDragMove);
+        window.addEventListener('touchmove', handleDragMove, { passive: true });
+        window.addEventListener('mouseup', handleDragEnd);
+        window.addEventListener('touchend', handleDragEnd);
+
         return () => {
             if (animationRef.current) {
                 cancelAnimationFrame(animationRef.current);
             }
+            // Clean up event listeners
+            strip.removeEventListener('mousedown', handleDragStart);
+            strip.removeEventListener('touchstart', handleDragStart);
+            window.removeEventListener('mousemove', handleDragMove);
+            window.removeEventListener('touchmove', handleDragMove);
+            window.removeEventListener('mouseup', handleDragEnd);
+            window.removeEventListener('touchend', handleDragEnd);
         };
     }, [images.length, currentIndex, userSelected, onIndexChange]);
 
-    const extendedImages = Array(5).fill(images).flat();
+    // Create array of indices for repeated frames
+    const frameIndices = Array(5).fill(0)
+        .map((_, repeatIndex) =>
+            Array(images.length).fill(0)
+                .map((_, i) => ({
+                    index: i,
+                    repeatIndex,
+                    key: `${repeatIndex}-${images[i]._key || i}`
+                }))
+        ).flat();
 
     return (
         <FilmStripContainer>
@@ -271,19 +377,19 @@ function FilmStripComponent({ images, currentIndex, onFrameClick, userSelected, 
                     <HolesRow $isTop />
                     <HolesRow />
                 </HolesContainer>
-                {extendedImages.map((image, index) => (
+                {frameIndices.map(({ index, key }) => (
                     <FilmFrameContainer
-                        key={`${index}-${image._key || index}`}
+                        key={key}
                         onClick={() => onFrameClick(index)}
                     >
                         <ExposureArea>
                             <FrameImage
-                                src={urlFor(image).width(300).url()}
-                                alt={`Frame ${(index % images.length) + 1}`}
+                                src={urlFor(images[index]).width(300).url()}
+                                alt={`Frame ${index + 1}`}
                                 loading="lazy"
                             />
                         </ExposureArea>
-                        <FrameNumber>{(index % images.length) + 1}</FrameNumber>
+                        <FrameNumber>{index + 1}</FrameNumber>
                     </FilmFrameContainer>
                 ))}
             </FilmStrip>
