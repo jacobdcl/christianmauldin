@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { client, urlFor } from '../lib/sanity';
-import { HEADER_HEIGHT } from '../styles/SharedComponents';
-import FilmStrip from './FilmStrip';
+import { urlFor } from '../lib/sanity';
 
 // Constants
 const SCROLL_SPEED = 25;
@@ -12,47 +10,25 @@ const FILM_STRIP_HEIGHT = 140;
 const FILM_STRIP_HEIGHT_MOBILE = 110;
 const FILM_EXTENSION = 10000; // How far the film extends beyond viewport
 
-// Styled Components
-const CarouselContainer = styled.div`
+// Film Strip Components
+const FilmStripContainer = styled.div`
   width: 100%;
-  min-height: 100vh;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: calc(${HEADER_HEIGHT} + 2vh) 0 4vh;
-  background: #fff;
+  height: ${FILM_STRIP_HEIGHT}px;
   position: relative;
+  overflow: hidden;
+  background: #000;
 
   @media (max-width: 768px) {
-    padding: calc(${HEADER_HEIGHT} + 1vh) 0 3vh;
+    height: ${FILM_STRIP_HEIGHT_MOBILE}px;
   }
 `;
 
-const MainImageContainer = styled.div`
-  width: 100%;
-  height: 55vh;
+const FilmStrip = styled.div`
+  position: absolute;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 5vw;
-  margin-bottom: 5vh;
-
-  @media (max-width: 768px) {
-    height: 60vh;
-    margin-bottom: 2vh;
-  }
-`;
-
-const MainImage = styled.img`
-  max-width: 80%;
-  max-height: 100%;
-  object-fit: contain;
-  
-  @media (max-width: 768px) {
-    max-width: 95%;
-    max-height: 95%;
-  }
+  width: max-content;
+  height: 100%;
+  background: #000;
 `;
 
 // Film Decorations
@@ -232,60 +208,87 @@ const FrameNumber = styled.div`
   }
 `;
 
-// Main Component
-function HeroCarousel() {
-  const [images, setImages] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [userSelected, setUserSelected] = useState(false);
+function FilmStripComponent({ images, currentIndex, onFrameClick, userSelected, onIndexChange }) {
+    const stripRef = useRef(null);
+    const animationRef = useRef(null);
+    const scrollRef = useRef({ startTime: null, totalOffset: 0 });
 
-  // Fetch images on mount
-  useEffect(() => {
-    const fetchImages = async () => {
-      try {
-        const [works, personal] = await Promise.all([
-          client.fetch('*[_type == "work"] { images[] }'),
-          client.fetch('*[_type == "personal"] { images[] }')
-        ]);
+    // Animation effect
+    useEffect(() => {
+        if (!images.length || !stripRef.current) return;
 
-        const allImages = [
-          ...works.flatMap(work => work.images || []),
-          ...personal.flatMap(collection => collection.images || [])
-        ].sort(() => Math.random() - 0.5);
+        const animate = (timestamp) => {
+            if (!scrollRef.current.startTime) {
+                scrollRef.current.startTime = timestamp;
+            }
 
-        setImages(allImages);
-      } catch (error) {
-        console.error('Error fetching images:', error);
-      }
-    };
+            const progress = timestamp - scrollRef.current.startTime;
+            scrollRef.current.totalOffset += (SCROLL_SPEED / 1000) * 16.67;
 
-    fetchImages();
-  }, []);
+            const totalWidth = FRAME_WIDTH * images.length;
+            if (scrollRef.current.totalOffset >= totalWidth) {
+                scrollRef.current.totalOffset -= totalWidth;
+                scrollRef.current.startTime = timestamp;
+            }
 
-  const handleFrameClick = (index) => {
-    setCurrentIndex(index % images.length);
-    setUserSelected(true);
-  };
+            stripRef.current.style.transform = `translateX(-${scrollRef.current.totalOffset}px)`;
 
-  if (!images.length) return null;
+            if (!userSelected) {
+                const viewportCenter = window.innerWidth / 2;
+                const scrollPosition = scrollRef.current.totalOffset;
+                const adjustedPosition = (scrollPosition + viewportCenter) % (images.length * FRAME_WIDTH);
+                const newIndex = Math.floor(adjustedPosition / FRAME_WIDTH) % images.length;
 
-  return (
-    <CarouselContainer>
-      <MainImageContainer>
-        <MainImage
-          src={urlFor(images[currentIndex]).width(1200).url()}
-          alt="Featured work"
-          loading="eager"
-        />
-      </MainImageContainer>
-      <FilmStrip
-        images={images}
-        currentIndex={currentIndex}
-        onFrameClick={handleFrameClick}
-        userSelected={userSelected}
-        onIndexChange={setCurrentIndex}
-      />
-    </CarouselContainer>
-  );
+                if (newIndex !== currentIndex) {
+                    onIndexChange(newIndex);
+                }
+            }
+
+            animationRef.current = requestAnimationFrame(animate);
+        };
+
+        animationRef.current = requestAnimationFrame(animate);
+
+        return () => {
+            if (animationRef.current) {
+                cancelAnimationFrame(animationRef.current);
+            }
+        };
+    }, [images.length, currentIndex, userSelected, onIndexChange]);
+
+    const extendedImages = Array(5).fill(images).flat();
+
+    return (
+        <FilmStripContainer>
+            <FilmStrip ref={stripRef}>
+                <FilmScratchOverlay />
+                <KodakText>
+                    {Array(20).fill('KODAK EPP 5005').map((text, i) => (
+                        <span key={i}>{text}</span>
+                    ))}
+                </KodakText>
+                <HolesContainer>
+                    <HolesRow $isTop />
+                    <HolesRow />
+                </HolesContainer>
+                {extendedImages.map((image, index) => (
+                    <FilmFrameContainer
+                        key={`${index}-${image._key || index}`}
+                        onClick={() => onFrameClick(index)}
+                    >
+                        <ExposureArea>
+                            <FrameImage
+                                src={urlFor(image).width(300).url()}
+                                alt={`Frame ${(index % images.length) + 1}`}
+                                loading="lazy"
+                            />
+                        </ExposureArea>
+                        <FrameNumber>{(index % images.length) + 1}</FrameNumber>
+                    </FilmFrameContainer>
+                ))}
+            </FilmStrip>
+        </FilmStripContainer>
+    );
 }
 
-export default HeroCarousel; 
+export default FilmStripComponent; 
