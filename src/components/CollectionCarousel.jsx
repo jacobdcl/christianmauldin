@@ -16,7 +16,8 @@ const Container = styled.div`
   @media (max-width: 768px) {
     gap: 0.5rem;
     padding: 0 0.5rem;
-    min-height: 400px;
+    height: 60vh;
+    min-height: 300px;
   }
 `;
 

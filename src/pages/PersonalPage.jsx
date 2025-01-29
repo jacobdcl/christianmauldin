@@ -6,7 +6,7 @@ import CollectionCarousel from '../components/CollectionCarousel';
 import { HEADER_HEIGHT } from '../styles/SharedComponents';
 
 const Container = styled.div`
-  padding: ${HEADER_HEIGHT} 0 0;
+  padding: calc(${HEADER_HEIGHT} + 2rem) 0 4rem;
   min-height: 100vh;
   max-width: 100%;
   margin: 0;
@@ -36,7 +36,7 @@ const Collection = styled.div`
 const CollectionTitle = styled.h2`
   font-size: 1.75rem;
   font-weight: 500;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   letter-spacing: -0.02em;
   text-align: center;
 `;
@@ -45,7 +45,7 @@ const CollectionDescription = styled.p`
   font-size: 1rem;
   color: #666;
   line-height: 1.5;
-  margin-bottom: 3rem;
+  margin-bottom: 1.5rem;
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
