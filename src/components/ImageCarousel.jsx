@@ -3,16 +3,13 @@ import styled from 'styled-components';
 import PropTypes from 'prop-types';
 
 const Container = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
   width: 100%;
-  height: 100vh;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  background: rgba(0, 0, 0, 0.25);
+  position: relative;
+  background: #000;
 `;
 
 const ImageWrapper = styled.div`
@@ -21,7 +18,6 @@ const ImageWrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6rem 4rem 6rem 4rem;
 `;
 
 const Image = styled.img`
@@ -42,7 +38,8 @@ const Button = styled.button`
   border: none;
   width: 50px;
   height: 50px;
-  border-radius: 25px;
+  border-radius: 55px;
+  margin-right: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -76,7 +73,7 @@ const Button = styled.button`
 
 const Counter = styled.div`
   position: absolute;
-  bottom: 2rem;
+  bottom: 1rem;
   left: 50%;
   transform: translateX(-50%);
   background: rgba(0, 0, 0, 0.5);

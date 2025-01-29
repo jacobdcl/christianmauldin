@@ -2,32 +2,65 @@ import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { client, urlFor } from '../lib/sanity';
 import PageTransition from '../components/PageTransition';
-import ImageCarousel from '../components/ImageCarousel';
-import CyclingImage from '../components/CyclingImage';
-import {
-    PageContainer,
-    Grid,
-    Card,
-    CardImage,
-    CardContent,
-    CardTitle,
-    CardDescription,
-    LoadingText,
-    Modal,
-    ModalHeader,
-    ModalTitle,
-    ModalDescription,
-    CloseButton
-} from '../styles/SharedComponents';
+import CollectionCarousel from '../components/CollectionCarousel';
+import { HEADER_HEIGHT } from '../styles/SharedComponents';
 
-const CarouselContainer = styled.div`
-    flex: 1;
-    padding: 2rem;
+const Container = styled.div`
+  padding: ${HEADER_HEIGHT} 0 0;
+  min-height: 100vh;
+  max-width: 100%;
+  margin: 0;
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+`;
+
+const Collection = styled.div`
+  margin-bottom: 8rem;
+  padding: 0 2rem;
+
+  &:last-child {
+    margin-bottom: 2rem;
+  }
+
+  /* Remove padding for the carousel */
+  > *:last-child {
+    margin: 0 -2rem;
+    width: calc(100% + 4rem);
+  }
+`;
+
+const CollectionTitle = styled.h2`
+  font-size: 1.75rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+  text-align: center;
+`;
+
+const CollectionDescription = styled.p`
+  font-size: 1rem;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 3rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+`;
+
+const LoadingText = styled.div`
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+  color: #666;
 `;
 
 function PersonalPage() {
     const [collections, setCollections] = useState([]);
-    const [selectedCollection, setSelectedCollection] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -48,60 +81,30 @@ function PersonalPage() {
     if (loading) {
         return (
             <PageTransition>
-                <PageContainer>
+                <Container>
                     <LoadingText>Loading collections...</LoadingText>
-                </PageContainer>
+                </Container>
             </PageTransition>
         );
     }
 
     return (
         <PageTransition>
-            <PageContainer>
-                <Grid>
-                    {collections.map((collection) => (
-                        <Card
-                            key={collection._id}
-                            onClick={() => setSelectedCollection(collection)}
-                        >
-                            <CardImage>
-                                <CyclingImage
-                                    images={collection.images.map(image =>
-                                        urlFor(image).width(600).url()
-                                    )}
-                                    alt={collection.title}
-                                />
-                            </CardImage>
-                            <CardContent>
-                                <CardTitle>{collection.title}</CardTitle>
-                                <CardDescription>{collection.description}</CardDescription>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </Grid>
-
-                {selectedCollection && (
-                    <Modal
-                        $isOpen={!!selectedCollection}
-                        onClick={() => setSelectedCollection(null)}
-                    >
-                        <CloseButton onClick={() => setSelectedCollection(null)}>
-                            ×
-                        </CloseButton>
-                        <ModalHeader>
-                            <ModalTitle>{selectedCollection.title}</ModalTitle>
-                            <ModalDescription>{selectedCollection.description}</ModalDescription>
-                        </ModalHeader>
-                        <CarouselContainer onClick={e => e.stopPropagation()}>
-                            <ImageCarousel
-                                images={selectedCollection.images.map(image =>
-                                    urlFor(image).width(1200).url()
-                                )}
-                            />
-                        </CarouselContainer>
-                    </Modal>
-                )}
-            </PageContainer>
+            <Container>
+                {collections.map((collection) => (
+                    <Collection key={collection._id}>
+                        <CollectionTitle>{collection.title}</CollectionTitle>
+                        {collection.description && (
+                            <CollectionDescription>{collection.description}</CollectionDescription>
+                        )}
+                        <CollectionCarousel
+                            images={collection.images.map(image =>
+                                urlFor(image).width(1600).url()
+                            )}
+                        />
+                    </Collection>
+                ))}
+            </Container>
         </PageTransition>
     );
 }
