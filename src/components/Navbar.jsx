@@ -6,7 +6,7 @@ import { HEADER_HEIGHT } from '../styles/SharedComponents';
 const Nav = styled.nav`
   width: 100%;
   height: ${HEADER_HEIGHT};
-  padding: 0 2rem;
+  padding: 0 1.35rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -15,12 +15,17 @@ const Nav = styled.nav`
   left: 0;
   z-index: 1000;
   background: ${({ theme }) => theme.colors.background};
+
+  @media (max-width: 768px) {
+    padding: 0 1rem;
+  }
 `;
 
 const Logo = styled(Link)`
   font-size: 1.8rem;
   font-weight: 600;
   letter-spacing: -0.02em;
+  padding: 4px 0 0 0 ;
 
   @media (max-width: 768px) {
     font-size: 1.5rem;

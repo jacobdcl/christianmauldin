@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import PropTypes from 'prop-types';
 
@@ -7,16 +7,16 @@ const Container = styled.div`
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0rem;
   padding: 0 1rem;
   height: 85vh;
   min-height: 600px;
   background-color: transparent;
 
   @media (max-width: 768px) {
-    gap: 0.5rem;
-    padding: 0 0.5rem;
-    height: 60vh;
+    gap: 0rem;
+    padding: 0 0.15rem;
+    height: 55vh;
     min-height: 300px;
   }
 `;
@@ -56,6 +56,7 @@ const NavigationButton = styled.button`
   height: 100%;
   min-width: 28px;
   z-index: 2;
+  -webkit-tap-highlight-color: transparent;
 
   &:hover {
     opacity: 1;
@@ -68,7 +69,7 @@ const NavigationButton = styled.button`
 
   @media (max-width: 768px) {
     font-size: 2rem;
-    min-width: 40px;
+    width: 25px;
   }
 `;
 
@@ -100,13 +101,31 @@ const ProgressDot = styled.button`
 function CollectionCarousel({ images }) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [isPaused, setIsPaused] = useState(false);
+
+    useEffect(() => {
+        if (!isPaused && images.length > 1) {
+            const interval = setInterval(() => {
+                setCurrentIndex(current => (current === images.length - 1 ? 0 : current + 1));
+            }, 3000);
+
+            return () => clearInterval(interval);
+        }
+    }, [images.length, isPaused]);
 
     const handlePrevious = () => {
+        setIsPaused(true);
         setCurrentIndex(current => (current === 0 ? images.length - 1 : current - 1));
     };
 
     const handleNext = () => {
+        setIsPaused(true);
         setCurrentIndex(current => (current === images.length - 1 ? 0 : current + 1));
+    };
+
+    const handleDotClick = (index) => {
+        setIsPaused(true);
+        setCurrentIndex(index);
     };
 
     const handleImageLoad = () => {
@@ -156,7 +175,7 @@ function CollectionCarousel({ images }) {
                         <ProgressDot
                             key={index}
                             $active={index === currentIndex}
-                            onClick={() => setCurrentIndex(index)}
+                            onClick={() => handleDotClick(index)}
                             aria-label={`Go to image ${index + 1}`}
                         />
                     ))}
