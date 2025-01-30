@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import styled from 'styled-components';
 import PropTypes from 'prop-types';
 
@@ -101,30 +101,16 @@ const ProgressDot = styled.button`
 function CollectionCarousel({ images }) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loading, setLoading] = useState(true);
-    const [isPaused, setIsPaused] = useState(false);
-
-    useEffect(() => {
-        if (!isPaused && images.length > 1) {
-            const interval = setInterval(() => {
-                setCurrentIndex(current => (current === images.length - 1 ? 0 : current + 1));
-            }, 3000);
-
-            return () => clearInterval(interval);
-        }
-    }, [images.length, isPaused]);
 
     const handlePrevious = () => {
-        setIsPaused(true);
         setCurrentIndex(current => (current === 0 ? images.length - 1 : current - 1));
     };
 
     const handleNext = () => {
-        setIsPaused(true);
         setCurrentIndex(current => (current === images.length - 1 ? 0 : current + 1));
     };
 
     const handleDotClick = (index) => {
-        setIsPaused(true);
         setCurrentIndex(index);
     };
 
